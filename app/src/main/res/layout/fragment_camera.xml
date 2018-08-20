@@ -6,16 +6,18 @@
     android:layout_height="match_parent"
     tools:context=".view.Camera">
 
-    <io.fotoapparat.view.CameraView
+    <com.wonderkiln.camerakit.CameraView xmlns:camerakit="http://schemas.android.com/apk/res-auto"
         android:id="@+id/camera_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@android:color/black" />
+        android:layout_height="wrap_content"
+        camerakit:ckFacing="back"
+        camerakit:ckFlash="on"
+        camerakit:ckJpegQuality="100"
+        camerakit:ckFocus="tap"
+        camerakit:ckZoom="pinch"
+        camerakit:ckPermissions="picture"
+        android:adjustViewBounds="true" />
 
-    <io.fotoapparat.view.FocusView
-        android:id="@+id/focus_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/camera_capture"
@@ -24,8 +26,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center_horizontal"
-        android:layout_margin="@dimen/focus_diameter"
-        app:fabCustomSize="@dimen/focus_diameter"
+        android:layout_margin="@dimen/fab_margin"
+        app:fabCustomSize="@dimen/fab_button_size"
         tools:ignore="KeyboardInaccessibleWidget" />
 
     <ProgressBar

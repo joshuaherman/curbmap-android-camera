@@ -17,9 +17,9 @@
         android:id="@+id/image_send"
         android:clickable="true"
         android:layout_gravity="bottom|center_horizontal"
-        android:layout_margin="@dimen/focus_diameter"
+        android:layout_margin="@dimen/fab_margin"
         android:layout_width="wrap_content"
-        app:fabCustomSize="@dimen/focus_diameter"
+        app:fabCustomSize="@dimen/fab_button_size"
         android:layout_height="wrap_content"
         tools:ignore="KeyboardInaccessibleWidget" />
 

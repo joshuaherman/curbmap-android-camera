@@ -1,8 +1,8 @@
 package com.curbmap.android.view
 
 
-import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,17 +16,9 @@ import androidx.navigation.Navigation
 import com.curbmap.android.R
 import com.curbmap.android.SharedCameraAndPreviewViewModel
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import io.fotoapparat.Fotoapparat
-import io.fotoapparat.parameter.ScaleType
-import io.fotoapparat.selector.back
-import io.fotoapparat.selector.containsFps
-import io.fotoapparat.selector.manualJpegQuality
-import io.fotoapparat.selector.on
-import io.fotoapparat.view.CameraView
-import io.fotoapparat.view.FocusView
-import timber.log.Timber.*
-import java.util.*
-import java.util.concurrent.ExecutionException
+import com.wonderkiln.camerakit.*
+import timber.log.Timber.DebugTree
+import timber.log.Timber.plant
 
 
 /**
@@ -37,14 +29,13 @@ import java.util.concurrent.ExecutionException
  * Use the [Camera.newInstance] factory method to
  * create an instance of this fragment.
  */
-class Camera : Fragment(), View.OnClickListener, NavController.OnNavigatedListener {
+class Camera : Fragment(), View.OnClickListener, NavController.OnNavigatedListener, CameraKitEventListener {
 
 
     private val TAG = "Camera"
 
     private lateinit var viewModel: SharedCameraAndPreviewViewModel
-    private lateinit var fotoapparat: Fotoapparat
-    private lateinit var focusView: FocusView
+
     private lateinit var cameraView: CameraView
     private lateinit var button: FloatingActionButton
     private lateinit var progressBar: ProgressBar
@@ -63,10 +54,7 @@ class Camera : Fragment(), View.OnClickListener, NavController.OnNavigatedListen
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_camera, container, false)
         this.cameraView = view.findViewById(R.id.camera_view)
-        this.focusView = view.findViewById(R.id.focus_view)
-
-        fotoapparat = createFotoapparat()
-
+        cameraView.addCameraKitListener(this)
         this.button = view.findViewById(R.id.camera_capture)
         this.progressBar = view.findViewById(R.id.progress_circular)
         progressBar.visibility = View.INVISIBLE
@@ -84,39 +72,31 @@ class Camera : Fragment(), View.OnClickListener, NavController.OnNavigatedListen
 
 
     override fun onPause() {
-        fotoapparat.stop()
+        cameraView.stop()
         super.onPause()
     }
 
 
     override fun onStart() {
         super.onStart()
-        if (permissionGranted) {
-            fotoapparat.start()
-        }
     }
 
     override fun onStop() {
-        fotoapparat.stop()
         super.onStop()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (permissionGranted) {
+            cameraView.start()
+        }
     }
 
     override fun onNavigated(controller: NavController, destination: NavDestination) {
         //controller.popBackStack();
     }
 
-    private fun createFotoapparat(): Fotoapparat {
-        return Fotoapparat
-                .with(this.context!!)
-                .into(cameraView!!)
-                .focusView(focusView)
-                .previewScaleType(ScaleType.CenterCrop)
-                .lensPosition(back())
-                .flash(on())
-                .cameraErrorCallback { e -> Toast.makeText(activity, "Camera Error: ", Toast.LENGTH_LONG).show()}
-                //.jpegQuality(manualJpegQuality(50))
-                .build()
-    }
+
 
    /* private fun capture() = if (this::viewModel.isInitialized) {
         val result = fotoapparat.takePicture()
@@ -137,14 +117,12 @@ class Camera : Fragment(), View.OnClickListener, NavController.OnNavigatedListen
 
         if (this::viewModel.isInitialized) {
 
-            val result = fotoapparat.takePicture()
+
+
+            cameraView.captureImage()
 
                 //viewModel.setPhotoResult(result)
-                try {
-                    viewModel.getBitmapMutableLiveData().value = result.toBitmap().await().bitmap
-                }catch (e:ExecutionException){
-                    e(e.message)
-                }
+
 
             Navigation.findNavController(v).navigate(CameraDirections.actionCameraToImagePreview())
             //navigateToPreview(v)
@@ -176,7 +154,27 @@ class Camera : Fragment(), View.OnClickListener, NavController.OnNavigatedListen
 
 */
 
+    override fun onImage(p0: CameraKitImage?) {
+       do {
+           progressBar.visibility = View.VISIBLE
+       }while (p0?.bitmap == null)
 
+       progressBar.visibility = View.INVISIBLE
+
+       viewModel.setBitmap(p0.bitmap!!)
+    }
+
+    override fun onVideo(p0: CameraKitVideo?) {
+        //ignore
+    }
+
+    override fun onEvent(p0: CameraKitEvent?) {
+        //ignore
+    }
+
+    override fun onError(p0: CameraKitError?) {
+        Log.e(tag, p0!!.message, p0.exception)
+    }
 }
 
 
